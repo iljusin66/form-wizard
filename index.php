@@ -12,6 +12,7 @@
         #formWizard {
             min-height: 600px;
         }
+
         #listDbCols.grabbing li {
             cursor: grabbing;
         }
@@ -27,8 +28,26 @@
                 <!-- Vaše menu -->
             </div>
             <div class="col" id="content">
+
+                <form id="formConfig" class="p-2 m-2 border border-1 rounded-3">
+                <div class="row g-3 align-items-center">
+                    <h3>Input group</h3>
+                    <div class="col-auto">
+                        <label for="inputGroupClass" class="col-form-label">class</label>
+                    </div>
+                    <div class="col-auto">
+                        <input type="text" id="inputGroupClass" name="inputGroupClass" class="form-control">
+                    </div>
+                    <div class="col-auto">
+                        <span id="inputGroupHelp" class="form-text">
+                        Obalovací prvek pro label+input
+                        </span>
+                    </div>
+                    </div>
+                </form>
+
                 <form id="formWizard" class="row p-2 border border-1">
-                    <div class="col"></div> <!-- Nový div pro přetahované sloupce -->
+                    <div class="col"></div> <!-- Div pro přetahované sloupce -->
                 </form>
             </div>
             <div class="col-2" id="dbCols">
@@ -81,6 +100,16 @@
             refreshDroppables();
         });
 
+        function bindClickEvent(element) {
+            $(element).unbind('click').on('click', function(){
+                if (element.is('[data-inputGroup]')) {
+                    console.log('test: ' + $(this).attr('data-inputGroup'));
+                }
+                
+                return false;
+            });
+        }
+
         function createInput(ui, el, bFormGroup = true) {
             var columnName = ui.helper.text();
             envRow = $('<div>').addClass('row');
@@ -101,8 +130,8 @@
                 envCol.append(envRow);
                 $(el).append(envCol);
             }
-
-
+            
+            bindClickEvent(envCol);
         }
 
         function saveForm() {
