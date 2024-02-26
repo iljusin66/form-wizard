@@ -19,6 +19,11 @@
         #listDbCols.grab li {
             cursor: grab;
         }
+
+        #listDbCols.grab li.used, #listDbCols.grabbing li.used { 
+            cursor: initial;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -29,31 +34,45 @@
             </div>
             <div class="col" id="content">
 
-                <form id="formConfig" class="p-2 m-2 border border-1 rounded-3">
-                <div class="row g-3 align-items-center">
-                    <h3>Input group</h3>
-                    <div class="col-auto">
-                        <label for="inputGroupClass" class="col-form-label">class</label>
+                <form id="formConfig" class="p-2 m-2 border border-1 rounded-3" data-colname="">
+                    <div class="row pb-2 g-3 align-items-center">
+                        <div class="col-2">
+                            <label for="inputGroupClass" class="col-form-label">Input group class</label>
+                        </div>
+                        <div class="col-4">
+                            <input type="text" id="inputGroupClass" name="inputGroupClass" class="form-control">
+                        </div>
+                        <div class="col-2">
+                            <label for="labelClass" class="col-form-label">Label class</label>
+                        </div>
+                        <div class="col-4">
+                            <input type="text" id="labelClass" name="labelClass" class="form-control">
+                        </div>
                     </div>
-                    <div class="col-auto">
-                        <input type="text" id="inputGroupClass" name="inputGroupClass" class="form-control">
-                    </div>
-                    <div class="col-auto">
-                        <span id="inputGroupHelp" class="form-text">
-                        Obalovací prvek pro label+input
-                        </span>
-                    </div>
+                    <div class="row g-3 align-items-center">
+                        <div class="col-2">
+                            <label for="inputType" class="col-form-label">Input type</label>
+                        </div>
+                        <div class="col-4">
+                            <input type="text" id="inputType" name="inputType" class="form-control">
+                        </div>
+                        <div class="col-2">
+                            <label for="inputClass" class="col-form-label">Input class</label>
+                        </div>
+                        <div class="col-4">
+                            <input type="text" id="inputClass" name="inputClass" class="form-control">
+                        </div>
                     </div>
                 </form>
 
-                <form id="formWizard" class="row p-2 border border-1">
+                <form id="formWizard" class="row p-2 m-2 border border-1 rounded-3">
                     <div class="col"></div> <!-- Div pro přetahované sloupce -->
                 </form>
             </div>
             <div class="col-2" id="dbCols">
                 <ul id="listDbCols" class="grab">
-                    <li>sloupec_1</li>
-                    <li>sloupec_2</li>
+                    <li class="sloupec_1">sloupec_1</li>
+                    <li class="sloupec_2">sloupec_2</li>
                 </ul>
             </div>
         </div>
@@ -64,21 +83,11 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
     <script>
         $(function() {
-            $("#listDbCols li").draggable({
-                helper: "clone",
-                start: function() {
-                    $('#listDbCols').addClass('grabbing');
-                    $('#listDbCols').removeClass('grab');
-                },
-                stop: function() {
-                    $('#listDbCols').removeClass('grabbing');
-                    $('#listDbCols').addClass('grab');
-                }
-            });
+            initDraggable();
 
             function refreshDroppables() {
                 $("#formWizard .col").droppable({
-                    accept: "#listDbCols li",
+                    accept: "#listDbCols li:not(.used)",
                     drop: function(event, ui) {
                         createInput(ui, this, true);
                         refreshDroppables();
@@ -88,7 +97,7 @@
                 });
 
                 $(".formGroup").droppable({
-                    accept: "#listDbCols li",
+                    accept: "#listDbCols li:not(.used)",
                     drop: function(event, ui) {
                         createInput(ui, this, false);
                         saveForm();
@@ -100,10 +109,39 @@
             refreshDroppables();
         });
 
+        function initDraggable() {
+            $( "#listDbCols li").draggable();
+            $( "#listDbCols li" ).draggable( "destroy" );
+            $("#listDbCols li:not(.used)").draggable({
+                helper: "clone",
+                start: function() {
+                    $('#listDbCols').addClass('grabbing');
+                    $('#listDbCols').removeClass('grab');
+                },
+                stop: function() {
+                    $('#listDbCols').removeClass('grabbing');
+                    $('#listDbCols').addClass('grab');
+                    $(this).addClass('used');
+                    initDraggable();
+                }
+            });
+        }
+
         function bindClickEvent(element) {
+            var input;
             $(element).unbind('click').on('click', function(){
                 if (element.is('[data-inputGroup]')) {
-                    console.log('test: ' + $(this).attr('data-inputGroup'));
+                    $('#formConfig').attr('data-colname', $(this).attr('data-inputGroup'));
+                    $('#inputGroupClass').val($(this).attr('class'));
+                    $('#labelClass').val($('label', this).attr('class'));
+                    input = $('input', this);
+                    inputType = input.attr('type');
+                    if (typeof(inputType) == 'undefined') {
+                        input = $('textarea', this);
+                        inputType = 'textarea';
+                    }
+                    $('#inputType').val(inputType);
+                    $('#inputClass').val(input.attr('class'));
                 }
                 
                 return false;
@@ -112,16 +150,16 @@
 
         function createInput(ui, el, bFormGroup = true) {
             var columnName = ui.helper.text();
-            envRow = $('<div>').addClass('row');
-            envCol = $('<div>').attr('data-inputGroup', columnName).addClass('col-12 inputGroup-' + columnName);
-            var formGroup = $('<div>').addClass('row m-2 border border-1 formGroup');
+            envRow = $('<div>').addClass('row py-2');
+            envCol = $('<div>').attr('data-inputGroup', columnName).addClass('col-12');
+            var formGroup = $('<div>').addClass('row p2 my-2 border border-1 rounded formGroup');
             var label = $('<label>').attr('for', columnName).addClass('col-sm-2 col-form-label').text(columnName);
             var inputDiv = $('<div>').addClass('col-sm-10');
             var input = $('<input>').attr('type', 'text').attr('name', columnName).attr('id', columnName).addClass('form-control');
             inputDiv.append(input);
 
             if (bFormGroup) {
-                envRow.append(label).append(inputDiv);
+            envRow.append(label).append(inputDiv);
                 envCol.append(envRow);
                 formGroup.append(envCol);
                 $(el).append(formGroup);
