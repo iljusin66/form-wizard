@@ -1,0 +1,27 @@
+#container {
+    width: 100%;
+    max-width: initial;
+}
+#formWizard {
+    min-height: 600px;
+}
+
+#listDbCols li {
+    display: list-item !important;
+}
+
+#listDbCols.grabbing li {
+    cursor: grabbing;
+}
+#listDbCols.grab li {
+    cursor: grab;
+}
+
+legend {
+    font-size: 1.25rem;
+    margin-bottom:0;
+}
+
+.rowInputGroup { position: relative !important; }
+.rowInputGroup:hover { background-color: #eee; }
+a.bi.removeInputGroup { width: auto; right:0; top:0; text-decoration: none; }
